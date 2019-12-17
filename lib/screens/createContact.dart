@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 
 class CreateContact extends StatefulWidget {
   final CollectionReference contacts;
+  final String title;
 
-  const CreateContact({Key key, @required this.contacts}) : super(key: key);
+  const CreateContact({Key key, @required this.contacts, @required this.title})
+      : super(key: key);
 
   @override
   _CreateContactState createState() => _CreateContactState(contacts: contacts);
@@ -72,7 +74,7 @@ class _CreateContactState extends State<CreateContact> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => goBack(context),
         ),
-        title: Text('Create Contact'),
+        title: Text(widget.title),
       ),
       body: Form(
         key: _formKey,

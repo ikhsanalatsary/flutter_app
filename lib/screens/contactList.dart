@@ -52,42 +52,63 @@ class _ContactListState extends State<ContactList> {
         child: StreamBuilder<QuerySnapshot>(
             stream: contacts.snapshots(),
             builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return ListView.builder(
-                    padding: EdgeInsets.all(8.0),
-                    itemCount: snapshot.data.documents.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final DocumentSnapshot doc =
-                          snapshot.data.documents[index];
-                      final _name = doc.data["name"];
-                      final _id = doc.documentID;
-                      return Column(
-                        children: <Widget>[
-                          ListTile(
-                            leading: Icon(Icons.person),
-                            title: Text(_name),
-                            onTap: () {
-                              print('tapped!');
-                              Navigator.push(context, MaterialPageRoute(
-                                builder: (context) {
-                                  return ViewContact(
-                                      key: ValueKey(_id),
-                                      name: _name,
-                                      id: _id,
-                                      contacts: contacts);
+              if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      CircularProgressIndicator(),
+                      Text('Loading'),
+                    ],
+                  );
+                case ConnectionState.waiting:
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      CircularProgressIndicator(),
+                      Text('Please wait'),
+                    ],
+                  );
+                default:
+                  if (snapshot.hasData) {
+                    print('sini ${snapshot.data.documents}');
+                    return ListView.builder(
+                        padding: EdgeInsets.all(8.0),
+                        itemCount: snapshot.data.documents.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final DocumentSnapshot doc =
+                              snapshot.data.documents[index];
+                          final _name = doc.data["name"];
+                          final _id = doc.documentID;
+                          return Column(
+                            children: <Widget>[
+                              ListTile(
+                                leading: Icon(Icons.person),
+                                title: Text(_name),
+                                onTap: () {
+                                  print('tapped!');
+                                  Navigator.push(context, MaterialPageRoute(
+                                    builder: (context) {
+                                      return ViewContact(
+                                          key: ValueKey(_id),
+                                          name: _name,
+                                          id: _id,
+                                          contacts: contacts);
+                                    },
+                                  ));
                                 },
-                              ));
-                            },
-                          ),
-                          Divider(
-                            color: Colors.grey[300],
-                          )
-                        ],
-                      );
-                    });
-              }
+                              ),
+                              Divider(
+                                color: Colors.grey[300],
+                              )
+                            ],
+                          );
+                        });
+                  }
 
-              return LinearProgressIndicator();
+                  return null; // unreachable
+              }
             }),
       ),
       floatingActionButton: FloatingActionButton(
@@ -98,6 +119,7 @@ class _ContactListState extends State<ContactList> {
               MaterialPageRoute(
                   builder: (context) => CreateContact(
                         contacts: contacts,
+                        title: 'Create',
                       )));
         },
       ),

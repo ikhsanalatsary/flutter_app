@@ -1,11 +1,16 @@
+import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class EditContact extends StatefulWidget {
   final CollectionReference contacts;
-  final String id;
+  final String id, title;
 
-  const EditContact({Key key, @required this.id, @required this.contacts})
+  const EditContact(
+      {Key key,
+      @required this.id,
+      @required this.contacts,
+      @required this.title})
       : super(key: key);
 
   @override
@@ -17,8 +22,9 @@ class _EditContactState extends State<EditContact> {
   final String id;
   final CollectionReference contacts;
   final _formKey = GlobalKey<FormState>();
+  final AsyncMemoizer _memoizer = AsyncMemoizer<DocumentSnapshot>();
   FocusNode _nameFocus, _phoneFocus, _emailFocus;
-  String _name, _phone, _email;
+  // String _name, _phone, _email;
   TextEditingController _nameController, _phoneController, _emailController;
 
   _EditContactState({this.contacts, this.id});
@@ -49,14 +55,14 @@ class _EditContactState extends State<EditContact> {
   }
 
   clear() {
-    _name = _phone = _email = null;
+    // _name = _phone = _email = null;
     _formKey.currentState?.reset();
   }
 
   onUpdate(context) {
     if (_formKey.currentState.validate()) {
       _formKey.currentState.save();
-      print('saved $_name, $_phone, $_email!');
+      // print('saved $_name, $_phone, $_email!');
       updateData();
       clear();
       goBack(context);
@@ -78,18 +84,20 @@ class _EditContactState extends State<EditContact> {
     Navigator.pop(context, _nameController.text);
   }
 
-  Widget _buildForm(BuildContext context, [data]) {
-    _nameController.value = _name == null && data != null
+  Widget _buildForm(BuildContext context,
+      [data = const {"name": "", "phone": "", "email": ""}]) {
+    print('data = $data');
+    _nameController.value = _nameController.text.isEmpty
         ? TextEditingValue(
             text: data["name"],
             selection: TextSelection.collapsed(offset: data["name"].length))
         : _nameController.value;
-    _phoneController.value = _phone == null && data != null
+    _phoneController.value = _phoneController.text.isEmpty
         ? TextEditingValue(
             text: data["phone"],
             selection: TextSelection.collapsed(offset: data["phone"].length))
         : _phoneController.value;
-    _emailController.value = _email == null && data != null
+    _emailController.value = _emailController.text.isEmpty
         ? TextEditingValue(
             text: data["email"],
             selection: TextSelection.collapsed(offset: data["email"].length))
@@ -119,13 +127,13 @@ class _EditContactState extends State<EditContact> {
               },
               onSaved: (val) {
                 print('ini $val');
-                _name = val;
+                // _name = val;
               },
               onChanged: (val) {
-                TextEditingValue(
-                    text: val,
-                    selection: TextSelection.collapsed(offset: val.length));
-                _name = val;
+                // _nameController.value = TextEditingValue(
+                //     text: val,
+                //     selection: TextSelection.collapsed(offset: val.length));
+                // _name = val;
               },
               onFieldSubmitted: (val) {
                 _nameFocus.unfocus();
@@ -153,13 +161,13 @@ class _EditContactState extends State<EditContact> {
               },
               onSaved: (String val) {
                 print('ini $val');
-                _phone = val;
+                // _phone = val;
               },
               onChanged: (val) {
-                TextEditingValue(
-                    text: val,
-                    selection: TextSelection.collapsed(offset: val.length));
-                _phone = val;
+                // _phoneController.value = TextEditingValue(
+                //     text: val,
+                //     selection: TextSelection.collapsed(offset: val.length));
+                // _phone = val;
               },
               onFieldSubmitted: (val) {
                 _phoneFocus.unfocus();
@@ -185,13 +193,13 @@ class _EditContactState extends State<EditContact> {
               },
               onSaved: (String val) {
                 print('ini $val');
-                _email = val;
+                // _email = val;
               },
               onChanged: (val) {
-                TextEditingValue(
-                    text: val,
-                    selection: TextSelection.collapsed(offset: val.length));
-                _email = val;
+                // _emailController.value = TextEditingValue(
+                //     text: val,
+                //     selection: TextSelection.collapsed(offset: val.length));
+                // _email = val;
               },
               onFieldSubmitted: (val) {
                 // saving
@@ -204,6 +212,10 @@ class _EditContactState extends State<EditContact> {
     );
   }
 
+  Future<DocumentSnapshot> _fetchData() async {
+    return _memoizer.runOnce(() => contacts.document(id).get());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -212,10 +224,10 @@ class _EditContactState extends State<EditContact> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => goBack(context),
         ),
-        title: Text('Create Contact'),
+        title: Text(widget.title),
       ),
       body: FutureBuilder<DocumentSnapshot>(
-          future: contacts.document(id).get(),
+          future: _fetchData(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return _buildForm(context, snapshot.data);

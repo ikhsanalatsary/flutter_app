@@ -3,13 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/screens/contactList.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   final Firestore _firestore = Firestore.instance;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  runApp(MyApp(_firestore, _firebaseMessaging));
+}
 
-  CollectionReference get contacts => _firestore.collection('contacts');
+class MyApp extends StatelessWidget {
+  final Firestore firestore;
+  final FirebaseMessaging firebaseMessaging;
+
+  const MyApp(this.firestore, this.firebaseMessaging);
+
+  CollectionReference get contacts => firestore.collection('contacts');
 
   // This widget is the root of your application.
   @override
@@ -29,7 +36,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: ContactList(dbContacts: contacts, fcm: _firebaseMessaging),
+      home: ContactList(dbContacts: contacts, fcm: firebaseMessaging),
     );
   }
 }
